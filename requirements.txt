@@ -1,8 +1,6 @@
-pandas
 numpy
+pandas
 scikit-learn
-xgboost
-mlflow
-gradio
+matplotlib
+seaborn
 joblib
- 
