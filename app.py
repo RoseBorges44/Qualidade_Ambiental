@@ -1,46 +1,47 @@
-import gradio as gr
-import joblib
-import numpy as np
-import pandas as pd
+# app.py
+import os, json
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from src.predict import predict_dict
 
-# Carregar artefatos
-model = joblib.load("model.pkl")
-scaler = joblib.load("scaler.pkl")
-label_encoder = joblib.load("label_encoder.pkl")
+app = FastAPI(title="Qualidade Ambiental API")
 
-feature_names = [
-    "Temperatura", "Umidade", "CO2", "CO",
-    "Pressao_Atm", "NO2", "SO2", "O3"
-]
-
-def predict_quality(temp, umid, co2, co, pressao, no2, so2, o3):
-    X = np.array([[temp, umid, co2, co, pressao, no2, so2, o3]])
-    X_scaled = scaler.transform(X)
-    pred = model.predict(X_scaled)
-    label = label_encoder.inverse_transform(pred)[0]
-    return label
-
-# Interface Gradio
-iface = gr.Interface(
-    fn=predict_quality,
-    inputs=[
-        gr.Number(label="Temperatura (°C)"),
-        gr.Number(label="Umidade (%)"),
-        gr.Number(label="CO2 (ppm)"),
-        gr.Number(label="CO (ppm)"),
-        gr.Number(label="Pressão Atmosférica (hPa)"),
-        gr.Number(label="NO2 (µg/m³)"),
-        gr.Number(label="SO2 (µg/m³)"),
-        gr.Number(label="O3 (µg/m³)")
-    ],
-    outputs=gr.Label(label="Qualidade Ambiental"),
-    title="Classificador de Qualidade Ambiental",
-    description="""
-    Modelo treinado para prever a qualidade do ar com base em sensores ambientais.
-    <br><br>
-    <b>Este conteúdo é destinado apenas para fins educacionais. Os dados exibidos são ilustrativos e podem não corresponder a situações reais.</b>
-    """
+ALLOW = os.getenv("ALLOW_ORIGINS", "*")
+allow_list = [x.strip() for x in ALLOW.split(",") if x.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"] if allow_list == ["*"] else allow_list,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-if __name__ == "__main__":
-    iface.launch()
+class Features(BaseModel):
+    Temperatura: float
+    Umidade: float
+    CO2: float
+    CO: float
+    Pressao_Atm: float
+    NO2: float
+    SO2: float
+    O3: float
+
+@app.get("/")
+def root():
+    return {"ok": True}
+
+@app.post("/predict/local")
+def predict_local(f: Features):
+    res = predict_dict(f.dict())
+    # (Opcional) rotular classes se existir models/classes.json
+    classes_path = os.getenv("CLASSES_PATH", "models/classes.json")
+    if os.path.exists(classes_path) and "prediction" in res:
+        with open(classes_path, "r", encoding="utf-8") as g:
+            classes = json.load(g)
+        idx = res["prediction"]
+        if isinstance(classes, dict):
+            res["label"] = classes.get(str(idx))
+        elif isinstance(classes, list) and 0 <= idx < len(classes):
+            res["label"] = classes[idx]
+    return res
