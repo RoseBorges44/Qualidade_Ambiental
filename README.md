@@ -1,22 +1,20 @@
- # Projeto: Classificação de Qualidade Ambiental 🌱
+# Qualidade Ambiental — base a partir do notebook
 
-Este repositório implementa uma pipeline de Machine Learning para prever a **Qualidade Ambiental** 
-a partir de variáveis como temperatura, umidade e gases poluentes.
+Este pacote foi gerado a partir de `notebooks/Desafio_Final.ipynb` para facilitar subir no Git.
 
 ## Estrutura
-- `data/` → contém o dataset (`dataset_ambiental.csv`)
-- `notebooks/` → análises exploratórias (EDA)
-- `src/` → código fonte
-  - `preprocess.py` → limpeza e preparação dos dados
-  - `train.py` → treino e avaliação dos modelos
-  - `predict.py` → funções de predição
-- `app.py` → aplicação web (Gradio/Streamlit)
-- `requirements.txt` → dependências do projeto
-- `.gitignore` → arquivos a serem ignorados pelo Git
+- notebooks/Desafio_Final.ipynb
+- src/notebook_extracted.py  (código consolidado do notebook, sem magics)
+- data/dataset_ambiental.csv (se disponível)
+- requirements.txt
+- .gitignore
 
-## Como rodar
-```bash
-pip install -r requirements.txt
-python src/train.py
-python app.py
-
+## Como usar
+1. Crie venv e instale dependências:
+   ```bash
+   python -m venv .venv
+   # Windows: .venv\Scripts\activate
+   # macOS/Linux: source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+2. Abra o notebook para continuar, ou separe `src/notebook_extracted.py` em módulos (preprocess/train/predict).
