@@ -383,6 +383,37 @@ def predict_by_local(local: Local):
             prediction_label = qualidade_mapping.get(qa)
         except Exception as e:
             print(f"[MODEL] Erro na predição: {e}")
+    # Retorno (mantive features_usadas para debug — remova se não quiser expor)
+        try:
+            if hasattr(MODEL, "feature_names_in_"):
+                cols = list(MODEL.feature_names_in_)
+            else:
+                cols = list(features.keys())
+
+            X = pd.DataFrame([features], columns=cols)
+            pred = MODEL.predict(X)
+
+            print("[DEBUG] Prediction raw:", pred)   # <--- log no console Railway
+
+            if hasattr(pred, "tolist"):
+                pred = pred.tolist()
+                print("[DEBUG] Prediction tolist:", pred)
+
+            # Se for lista de lista (multioutput)
+            if isinstance(pred[0], (list, tuple)):
+                qa, r_chuva, r_smog, r_efeito = pred[0]
+                prediction_idx = int(qa)
+                prediction_label = qa  # retorna número 0,1,2,3
+            else:
+                # single output
+                qa = int(pred[0])
+                prediction_idx = qa
+                prediction_label = qa
+
+        except Exception as e:
+            print(f"[MODEL] Erro na predição: {e}")
+
+  
 
     return {
         "cidade": local.cidade,
