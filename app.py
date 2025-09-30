@@ -377,7 +377,7 @@ def predict_by_local(local: Local):
             pred = MODEL.predict(X)
             if hasattr(pred, "tolist"):
                 pred = pred.tolist()
-            qa = int(pred[0])  # single-output
+            qa = int(pred[0])  
             qualidade_mapping = {0: "Muito Ruim", 1: "Ruim", 2: "Moderada", 3: "Boa", 4: "Excelente"}
             prediction_idx = qa
             prediction_label = qualidade_mapping.get(qa)
@@ -394,3 +394,5 @@ def predict_by_local(local: Local):
         "prediction": prediction_idx,
         "label": prediction_label,
     }
+
+
