@@ -395,4 +395,85 @@ def predict_by_local(local: Local):
         "label": prediction_label,
     }
 
+# ---------- Endpoints ----------
+@app.get("/")
+def root():
+    return {
+        "ok": True,
+        "model_loaded": MODEL is not None,
+        "model_path": MODEL_PATH
+    }
+
+
+@app.post("/predict/variaveis")
+def predict_variaveis(f: Features):
+    """Recebe features diretas e retorna predição com índice e label"""
+    res = predict_dict(f.dict())
+
+    prediction_idx = None
+    prediction_label = None
+
+    if "prediction" in res:
+        qa = int(res["prediction"])
+        prediction_idx = qa
+        qualidade_mapping = {
+            0: "Muito Ruim",
+            1: "Ruim",
+            2: "Moderada",
+            3: "Boa",
+            4: "Excelente"
+        }
+        prediction_label = qualidade_mapping.get(qa, str(qa))
+
+    return {
+        **res,
+        "prediction": prediction_idx,
+        "label": prediction_label
+    }
+
+
+@app.post("/predict/local")
+def predict_by_local(local: Local):
+    """Recebe cidade/pais, coleta clima/poluentes, converte p/ features e retorna predição"""
+    # ... [sua lógica de coleta do OpenWeather se mantém igual] ...
+
+    # 6) Predição da Qualidade Ambiental
+    prediction_idx = None
+    prediction_label = None
+    if MODEL is not None:
+        try:
+            if hasattr(MODEL, "feature_names_in_"):
+                cols = list(MODEL.feature_names_in_)
+            else:
+                cols = list(features.keys())
+
+            X = pd.DataFrame([features], columns=cols)
+            pred = MODEL.predict(X)
+
+            if hasattr(pred, "tolist"):
+                pred = pred.tolist()
+
+            qa = int(pred[0])  # índice
+            prediction_idx = qa
+            qualidade_mapping = {
+                0: "Muito Ruim",
+                1: "Ruim",
+                2: "Moderada",
+                3: "Boa",
+                4: "Excelente"
+            }
+            prediction_label = qualidade_mapping.get(qa, str(qa))
+        except Exception as e:
+            print(f"[MODEL] Erro na predição: {e}")
+
+    return {
+        "cidade": local.cidade,
+        "pais": local.pais,
+        "features_usadas": features,
+        "risco_chuva_acida": risco_chuva_acida,
+        "fumaca_toxica": fumaca_toxica,
+        "risco_efeito_estufa": risco_efeito_estufa,
+        "prediction": prediction_idx,
+        "label": prediction_label
+    }
 
