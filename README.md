@@ -1,118 +1,93 @@
-🌍 API de Qualidade Ambiental - Backend
+API de Qualidade Ambiental - Backend
 
-[Python
 
- (https://img.shields.io/badge/Python-3.10+-blue.svg)[ (https://img.shields.io/badge/Python-3.10+-blue.svg "url-only")](https://img.shields.io/badge/Python-3.10+-blue.svg "url-only" "url-only")
 
-](https://python.org)
-[FastAPI
 
- (https://img.shields.io/badge/FastAPI-0.104+-green.svg)[ (https://img.shields.io/badge/FastAPI-0.104+-green.svg "url-only")](https://img.shields.io/badge/FastAPI-0.104+-green.svg "url-only" "url-only")
 
-](https://fastapi.tiangolo.com)
-[Scikit-learn
 
- (https://img.shields.io/badge/Scikit--learn-1.4+-orange.svg)[ (https://img.shields.io/badge/Scikit--learn-1.4+-orange.svg "url-only")](https://img.shields.io/badge/Scikit--learn-1.4+-orange.svg "url-only" "url-only")
 
-](https://scikit-learn.org)
-[Railway
 
- (https://img.shields.io/badge/Deploy-Railway-purple.svg)[ (https://img.shields.io/badge/Deploy-Railway-purple.svg "url-only")](https://img.shields.io/badge/Deploy-Railway-purple.svg "url-only" "url-only")
 
-](https://railway.app)
 
 API REST para predição de qualidade do ar utilizando Machine Learning. Este projeto é o backend da aplicação IA Ambiental, desenvolvida como parte do Desafio Final de Aprendizagem de Máquina.
-🔗 Links Importantes
 
-    🌐 API em Produção: https://web-production-b320.up.railway.app
+Links Importantes
 
-    📚 Documentação (Swagger): https://web-production-b320.up.railway.app/docs
+API em Produção: https://web-production-b320.up.railway.app
 
-    🎨 Frontend: https://ia-ambiental.vercel.app (Repositório)
+Documentação (Swagger): https://web-production-b320.up.railway.app/docs
 
-    🌤️ API Externa: OpenWeatherMap
+Frontend: https://ia-ambiental.vercel.app (Repositório)
 
-📋 Sobre o Projeto
+API Externa: OpenWeatherMap
+
+Sobre o Projeto
 
 Esta API utiliza um modelo de Random Forest treinado para classificar a qualidade do ar em 5 categorias:
 
-    🟢 Muito Boa (0)
+Muito Boa (0)
 
-    🟡 Boa (1)
+Boa (1)
 
-    🟠 Moderada (2)
+Moderada (2)
 
-    🔴 Ruim (3)
+Ruim (3)
 
-    ⚫ Muito Ruim (4)
+Muito Ruim (4)
 
-🎯 Funcionalidades
+Funcionalidades
 
-    Predição por Variáveis: Análise baseada em dados inseridos manualmente
+Predição por Variáveis: Análise baseada em dados inseridos manualmente
 
-    Predição por Localização: Coleta automática de dados meteorológicos via OpenWeatherMap
+Predição por Localização: Coleta automática de dados meteorológicos via OpenWeatherMap
 
-    Cálculo de Riscos Ambientais: Avaliação de chuva ácida, fumaça tóxica e efeito estufa
+Cálculo de Riscos Ambientais: Avaliação de chuva ácida, fumaça tóxica e efeito estufa
 
-    API RESTful: Interface padronizada com documentação Swagger
+Arquitetura
 
-🏗️ Arquitetura
+Fluxos de Dados
 
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   API Backend   │    │  OpenWeatherMap │
-│  (Next.js)      │◄──►│   (FastAPI)     │◄──►│      API        │
-│                 │    │                 │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                              │
-                              ▼
-                       ┌─────────────────┐
-                       │  Modelo ML      │
-                       │ (Random Forest) │
-                       └─────────────────┘
-
-📊 Fluxos de Dados
-1. Predição por Variáveis
+1. Predição por Variáveis (Fluxo 1):
 
 Usuario → Frontend → API (/predict/variaveis) → Modelo ML → Resultado
 
-2. Predição por Localização
+
+2. Predição por Localização (Fluxo 2):
 
 Usuario → Frontend → API (/predict/local) → OpenWeatherMap → Modelo ML → Resultado
 
-🚀 Instalação e Execução
+Instalação e Execução
 Pré-requisitos
 
-    Python 3.10+
+Python 3.10+
 
-    pip ou conda
+pip
 
 1. Clone o repositório
-
-git clone <seu-repositorio>
+git clone https://github.com/RoseBorges44/Qualidade_Ambiental.git
 cd Qualidade_Ambiental
 
 2. Instale as dependências
-
 pip install -r requirements.txt
 
 3. Execute a aplicação
-
-# Desenvolvimento
 python app.py
 
-# Ou com uvicorn
+
+Ou com uvicorn:
+
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
 4. Acesse a documentação
 
-    Swagger UI: http://localhost:8000/docs
+Swagger UI: http://localhost:8000/docs
 
-    ReDoc: http://localhost:8000/redoc
+ReDoc: http://localhost:8000/redoc
 
-📡 Endpoints da API
-🏥 Health Check
-
+Endpoints da API
+Health Check
 GET /
+
 
 Verifica o status da API e carregamento do modelo.
 
@@ -125,9 +100,9 @@ Resposta:
   "version": "1.0.0"
 }
 
-🔬 Predição por Variáveis
-
+Predição por Variáveis
 POST /predict/variaveis
+
 
 Body:
 
@@ -142,6 +117,7 @@ Body:
   "O3": 80.0
 }
 
+
 Resposta:
 
 {
@@ -150,9 +126,9 @@ Resposta:
   "proba": [0.1, 0.7, 0.15, 0.05, 0.0]
 }
 
-🌍 Predição por Localização
-
+Predição por Localização
 POST /predict/local
+
 
 Body:
 
@@ -160,6 +136,7 @@ Body:
   "cidade": "Blumenau",
   "pais": "Brasil"
 }
+
 
 Resposta:
 
@@ -183,16 +160,6 @@ Resposta:
     "pm2_5": 8.1,
     "pm10": 15.3
   },
-  "features_usadas": {
-    "Temperatura": 22.5,
-    "Umidade": 78.0,
-    "CO2": 420.0,
-    "CO": 0.3,
-    "Pressao_Atm": 1015.2,
-    "NO2": 12.4,
-    "SO2": 3.2,
-    "O3": 65.8
-  },
   "riscos": {
     "chuva_acida": "Baixo",
     "fumaca_toxica": "Baixo",
@@ -201,20 +168,15 @@ Resposta:
   "qualidade_ambiental": {
     "prediction": 1,
     "label": "Boa"
-  },
-  "risco_chuva_acida": "Baixo",
-  "fumaca_toxica": "Baixo",
-  "risco_efeito_estufa": "Moderado",
-  "prediction": 1,
-  "label": "Boa"
+  }
 }
 
-🧪 Testando a API
+Testando a API
 1. Interface Swagger (Recomendado)
 
 Acesse /docs para uma interface visual completa.
-2. cURL
 
+2. cURL
 # Health Check
 curl https://web-production-b320.up.railway.app/
 
@@ -229,7 +191,6 @@ curl -X POST "https://web-production-b320.up.railway.app/predict/local" \
   -d '{"cidade":"Blumenau","pais":"Brasil"}'
 
 3. Python
-
 import requests
 
 # Teste básico
@@ -253,102 +214,97 @@ response = requests.post(
 )
 print(response.json())
 
-📁 Estrutura do Projeto
-
+Estrutura do Projeto
 Qualidade_Ambiental/
-├── 📁 src/
-│   ├── 🐍 predict.py              # Funções de predição
-│   ├── 🐍 feature_engineering.py  # Cálculo de riscos ambientais
-│   └── 🐍 __init__.py
-├── 📁 models/
-│   └── 🤖 model.pkl               # Modelo treinado
-├── 📁 notebooks/
-│   └── 📓 *.ipynb                 # Notebooks de desenvolvimento
-├── 🐍 app.py                      # Aplicação FastAPI principal
-├── 📋 requirements.txt            # Dependências Python
-├── 📖 README.md                   # Este arquivo
-└── 🔧 test_*.py                   # Scripts de teste
+├── src/
+│   ├── predict.py              # Funções de predição
+│   ├── feature_engineering.py  # Cálculo de riscos ambientais
+│   └── __init__.py
+├── models/
+│   └── model.pkl               # Modelo treinado
+├── notebooks/
+│   └── *.ipynb                 # Notebooks de desenvolvimento
+├── app.py                      # Aplicação FastAPI principal
+├── requirements.txt            # Dependências Python
+└── README.md                   # Este arquivo
 
-🔧 Tecnologias Utilizadas
+Tecnologias Utilizadas
 
-    FastAPI - Framework web moderno e rápido
+FastAPI - Framework web moderno e rápido
 
-    Scikit-learn - Biblioteca de Machine Learning
+Scikit-learn - Biblioteca de Machine Learning
 
-    Pandas - Manipulação de dados
+Pandas - Manipulação de dados
 
-    NumPy - Computação numérica
+NumPy - Computação numérica
 
-    Requests - Cliente HTTP
+Requests - Cliente HTTP
 
-    Uvicorn - Servidor ASGI
+Uvicorn - Servidor ASGI
 
-    Railway - Plataforma de deploy
+Railway - Plataforma de deploy
 
-🤖 Sobre o Modelo
+Sobre o Modelo
 Características
 
-    Algoritmo: Random Forest Classifier
+Algoritmo: Random Forest Classifier
 
-    Features: 8 variáveis ambientais
+Features: 8 variáveis ambientais
 
-    Classes: 5 níveis de qualidade do ar
+Classes: 5 níveis de qualidade do ar
 
-    Pré-processamento: ColumnTransformer com normalização
+Pré-processamento: ColumnTransformer com normalização
 
 Features Utilizadas
 
-    Temperatura (°C)
+Temperatura (°C)
 
-    Umidade (%)
+Umidade (%)
 
-    CO2 (ppm)
+CO2 (ppm)
 
-    CO (mg/m³)
+CO (mg/m³)
 
-    Pressão Atmosférica (hPa)
+Pressão Atmosférica (hPa)
 
-    NO2 (µg/m³)
+NO2 (µg/m³)
 
-    SO2 (µg/m³)
+SO2 (µg/m³)
 
-    O3 (µg/m³)
+O3 (µg/m³)
 
-🌱 Cálculo de Riscos Ambientais
-
-A API também calcula riscos específicos baseados nos poluentes:
-🌧️ Risco de Chuva Ácida
+Cálculo de Riscos Ambientais
+Risco de Chuva Ácida
 
 Baseado nos níveis de SO2 e NO2:
 
-    Baixo: SO2 < 20 e NO2 < 40
+Baixo: SO2 < 20 e NO2 < 40
 
-    Moderado: Valores intermediários
+Moderado: Valores intermediários
 
-    Alto: SO2 ≥ 50 ou NO2 ≥ 80
+Alto: SO2 ≥ 50 ou NO2 ≥ 80
 
-💨 Fumaça Tóxica
+Fumaça Tóxica
 
 Baseado nos níveis de CO:
 
-    Baixo: CO < 10
+Baixo: CO < 10
 
-    Moderado: 10 ≤ CO < 30
+Moderado: 10 ≤ CO < 30
 
-    Alto: CO ≥ 30
+Alto: CO ≥ 30
 
-🌡️ Efeito Estufa
+Efeito Estufa
 
 Baseado nos níveis de CO2:
 
-    Baixo: CO2 < 400
+Baixo: CO2 < 400
 
-    Moderado: 400 ≤ CO2 < 450
+Moderado: 400 ≤ CO2 < 450
 
-    Alto: CO2 ≥ 450
+Alto: CO2 ≥ 450
 
-🚀 Deploy
-Railway (Produção)
+Deploy
 
 A aplicação está deployada no Railway com as seguintes configurações:
 
@@ -359,51 +315,28 @@ PYTHON_VERSION=3.10
 # Comando de start
 uvicorn app:app --host 0.0.0.0 --port $PORT
 
-Deploy Local com Docker
-
-FROM python:3.10-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . .
-EXPOSE 8000
-
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
-
-🤝 Integração com Frontend
+Integração com Frontend
 
 Esta API foi desenvolvida para integrar com o frontend IA Ambiental, construído em Next.js. A comunicação acontece através de requisições HTTP para os endpoints documentados.
-CORS
 
-A API está configurada para aceitar requisições do domínio do frontend:
+Limitações e Considerações
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://ia-ambiental.vercel.app", "http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+Dados Educacionais: Este projeto é destinado apenas para fins educacionais
 
-⚠️ Limitações e Considerações
+API Externa: Dependente da disponibilidade da OpenWeatherMap API
 
-    Dados Educacionais: Este projeto é destinado apenas para fins educacionais
+Rate Limiting: Sujeito aos limites da API externa
 
-    API Externa: Dependente da disponibilidade da OpenWeatherMap API
+Precisão: O modelo foi treinado com dados específicos e pode não refletir situações reais
 
-    Rate Limiting: Sujeito aos limites da API externa
-
-    Precisão: O modelo foi treinado com dados específicos e pode não refletir situações reais
-
-📄 Licença
+Licença
 
 Este projeto é destinado exclusivamente para fins educacionais como parte do Desafio Final de Aprendizagem de Máquina.
-👥 Contribuidores
 
-    Backend: Desenvolvido como parte do desafio acadêmico
+Contribuidores
 
-    Frontend: emanoelsp - IA Ambiental
+Backend: Desenvolvido como parte do desafio acadêmico
 
-📞 Suporte: Para dúvidas sobre a API, consulte a documentação Swagger ou teste os endpoints diretamente na interface.
+Frontend: emanoelsp - IA Ambiental
+
+Suporte: Para dúvidas sobre a API, consulte a documentação Swagger ou teste os endpoints diretamente na interface.
