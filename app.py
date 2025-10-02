@@ -16,17 +16,16 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 try:
-    from src.predict import predict_dict
+    # Estas funções são essenciais para calcular os riscos
     from src.feature_engineering import (
         criar_risco_chuva_acida,
         criar_risco_smog,
         criar_risco_efeito_estufa,
     )
 except ImportError as e:
-    print(f"⚠️ Erro ao importar módulos src: {e}")
-    # Fallback caso não consiga importar
-    def predict_dict(features_dict):
-        return {"erro": "Módulo predict não disponível"}
+    print(f"⚠️ Erro ao importar módulos src: {e}. Verifique se a pasta 'src' existe.")
+    # Fallback vazio, mas a API dependerá de que as funções estejam disponíveis
+    pass
 
 app = FastAPI(title="Qualidade Ambiental API")
 
@@ -94,9 +93,8 @@ def load_model():
         print(f"❌ Erro ao carregar modelo: {e}")
         MODEL = None
 
-# Mapeamentos
+# Mapeamentos de Saída (Corrigido para retornar a palavra)
 QUALIDADE_MAPPING = {
-    
     0: "Excelente",
     1: "Boa", 
     2: "Moderada",
@@ -104,7 +102,88 @@ QUALIDADE_MAPPING = {
     4: "Muito Ruim"
 }
 
+RECOMENDACAO_MAPPING = {
+    0: "A qualidade do ar é excelente. Não há riscos conhecidos.",
+    1: "A qualidade do ar é satisfatória e a poluição representa pouco ou nenhum risco.",
+    2: "Grupos sensíveis (crianças, idosos, pessoas com doenças respiratórias) devem reduzir atividades ao ar livre.",
+    3: "Todos devem reduzir atividades ao ar livre. Grupos sensíveis devem evitar sair de casa.",
+    4: "A qualidade do ar é perigosa. Todos devem evitar atividades ao ar livre."
+}
+
 RISCO_MAPPING = {0: "Baixo", 1: "Alto"}
+
+# Funções de Predição e Cálculo de Risco
+def execute_prediction_and_risks(features: dict, source: str):
+    """Executa a predição do modelo e o cálculo dos riscos ambientais, retornando a estrutura completa."""
+    
+    # 1. Preparação dos Dados
+    df_inf = pd.DataFrame([features])
+    
+    # 2. Cálculo dos Riscos Ambientais
+    risco_chuva_acida = None
+    fumaca_toxica = None
+    risco_efeito_estufa = None
+    
+    try:
+        # Funções de feature engineering aplicadas
+        df_inf = criar_risco_chuva_acida(df_inf)
+        df_inf = criar_risco_smog(df_inf)
+        df_inf = criar_risco_efeito_estufa(df_inf)
+
+        # Mapeia o resultado binário para a palavra
+        risco_chuva_acida = RISCO_MAPPING.get(int(df_inf["Risco_Chuva_Acida"].iloc[0]))
+        fumaca_toxica = RISCO_MAPPING.get(int(df_inf["Risco_Smog_Fotoquimico"].iloc[0]))
+        risco_efeito_estufa = RISCO_MAPPING.get(int(df_inf["Risco_Efeito_Estufa"].iloc[0]))
+        
+    except Exception as e:
+        print(f"⚠️ Erro ao calcular riscos: {e}")
+
+    # 3. Predição da Qualidade Ambiental
+    prediction_idx = None
+    prediction_label = None
+    recommendation = "Modelo de predição indisponível."
+    
+    if MODEL is not None:
+        try:
+            if hasattr(MODEL, "feature_names_in_"):
+                cols = list(MODEL.feature_names_in_)
+            else:
+                cols = FEATURE_ORDER
+
+            X = pd.DataFrame([features], columns=cols)
+            pred = MODEL.predict(X)
+            
+            qa = int(pred[0])
+            prediction_idx = qa
+            # O campo que você precisa que retorne a PALAVRA
+            prediction_label = QUALIDADE_MAPPING.get(qa, str(qa)) 
+            recommendation = RECOMENDACAO_MAPPING.get(qa, "Recomendação padrão indisponível.")
+            
+        except Exception as e:
+            print(f"❌ Erro na predição do modelo: {e}")
+
+    # 4. Retorno estruturado (Formato do README)
+    structured_result = {
+        "qualidade_do_ar": {
+            "indice": prediction_idx,
+            "descricao": prediction_label, 
+            "recomendacao": recommendation
+        },
+        "riscos_ambientais": {
+            "chuva_acida": risco_chuva_acida,
+            "smog_fumaça_toxica": fumaca_toxica, 
+            "efeito_estufa": risco_efeito_estufa
+        },
+        "variaveis_utilizadas": features,
+        "fonte_dados": source,
+        # Campos planos para compatibilidade (a palavra está aqui!)
+        "prediction": prediction_idx,
+        "label": prediction_label,
+        "risco_chuva_acida": risco_chuva_acida,
+        "fumaca_toxica": fumaca_toxica,
+        "risco_efeito_estufa": risco_efeito_estufa,
+    }
+    return structured_result
 
 # Endpoints
 @app.get("/")
@@ -120,45 +199,16 @@ def root():
 @app.post("/predict/variaveis")
 def predict_variaveis(f: Features):
     """
-    Recebe features diretas e retorna predição de qualidade ambiental
+    Recebe features diretas e retorna predição de qualidade ambiental e riscos.
     """
     try:
         print(f"📥 Recebendo features: {f.dict()}")
         
-        # Usa a função predict_dict do módulo src.predict
-        res = predict_dict(f.dict())
-        print(f"🔮 Resultado predict_dict: {res}")
-        
-        # Verifica se houve erro na predição
-        if "erro" in res:
-            raise HTTPException(status_code=500, detail=res["erro"])
-        
-        # Adiciona mapeamento de labels
-        prediction_idx = res.get("prediction")
-        prediction_label = None
-        
-        if prediction_idx is not None:
-            # Tenta carregar classes personalizadas
-            classes_path = os.getenv("CLASSES_PATH", "models/classes.json")
-            if os.path.exists(classes_path):
-                try:
-                    with open(classes_path, "r", encoding="utf-8") as g:
-                        classes = json.load(g)
-                    if isinstance(classes, dict):
-                        prediction_label = classes.get(str(prediction_idx))
-                    elif isinstance(classes, list) and 0 <= prediction_idx < len(classes):
-                        prediction_label = classes[prediction_idx]
-                except Exception as e:
-                    print(f"⚠️ Erro ao carregar classes: {e}")
-            
-            # Usa mapeamento padrão se não encontrou label
-            if prediction_label is None:
-                prediction_label = QUALIDADE_MAPPING.get(prediction_idx, str(prediction_idx))
-        
-        return {
-            **res,
-            "label": prediction_label
-        }
+        # Executa a lógica de predição e risco. execute_prediction_and_risks agora inclui a PALAVRA no campo 'label'
+        resultado = execute_prediction_and_risks(f.dict(), source="Variáveis de entrada do usuário")
+
+        print(f"✅ Resultado final gerado por variáveis diretas")
+        return resultado
         
     except HTTPException:
         raise
@@ -227,7 +277,7 @@ def predict_by_local(local: Local):
 
         # 4) Coleta dados de poluição do ar
         air_url = "https://api.openweathermap.org/data/2.5/air_pollution"
-        comp = {}
+        comp = {} # Dicionário para armazenar dados de poluição brutos
         
         try:
             print(f"🏭 Consultando poluição para: lat={lat}, lon={lon}")
@@ -275,85 +325,20 @@ def predict_by_local(local: Local):
         
         print(f"🔧 Features calculadas: {features}")
 
-        # 6) Calcula riscos ambientais usando feature engineering
-        risco_chuva_acida = None
-        fumaca_toxica = None
-        risco_efeito_estufa = None
+        # 6) Executa a predição completa e obtém o resultado estruturado (com campos planos incluídos)
+        resultado = execute_prediction_and_risks(features, source="OpenWeather Air Pollution API")
         
-        try:
-            df_inf = pd.DataFrame([features])
-            df_inf = criar_risco_chuva_acida(df_inf)
-            df_inf = criar_risco_smog(df_inf)
-            df_inf = criar_risco_efeito_estufa(df_inf)
-
-            risco_chuva_acida = RISCO_MAPPING.get(int(df_inf["Risco_Chuva_Acida"].iloc[0]))
-            fumaca_toxica = RISCO_MAPPING.get(int(df_inf["Risco_Smog_Fotoquimico"].iloc[0]))
-            risco_efeito_estufa = RISCO_MAPPING.get(int(df_inf["Risco_Efeito_Estufa"].iloc[0]))
-            
-            print(f"⚠️ Riscos: Chuva={risco_chuva_acida}, Smog={fumaca_toxica}, Estufa={risco_efeito_estufa}")
-            
-        except Exception as e:
-            print(f"⚠️ Erro ao calcular riscos: {e}")
-
-        # 7) Predição da qualidade ambiental usando o modelo
-        prediction_idx = None
-        prediction_label = None
-        
-        if MODEL is not None:
-            try:
-                # Determina colunas esperadas pelo modelo
-                if hasattr(MODEL, "feature_names_in_"):
-                    cols = list(MODEL.feature_names_in_)
-                else:
-                    cols = FEATURE_ORDER
-
-                X = pd.DataFrame([features], columns=cols)
-                pred = MODEL.predict(X)
-                
-                print(f"🤖 Predição raw: {pred}")
-
-                if hasattr(pred, "tolist"):
-                    pred = pred.tolist()
-
-                # Assume que é single-output (qualidade ambiental)
-                qa = int(pred[0])
-                prediction_idx = qa
-                prediction_label = QUALIDADE_MAPPING.get(qa, str(qa))
-                
-                print(f"📊 Qualidade: {prediction_idx} ({prediction_label})")
-                
-            except Exception as e:
-                print(f"❌ Erro na predição do modelo: {e}")
-
-        # 8) Retorna resultado completo
-        resultado = {
-            "cidade": local.cidade,
-            "pais": local.pais,
-            "coordenadas": {"lat": lat, "lon": lon},
-            "dados_meteorologicos": {
-                "temperatura": temp_c,
-                "umidade": umid,
-                "pressao": press
-            },
-            "dados_poluicao": comp,
-            "features_usadas": features,
-            "riscos": {
-                "chuva_acida": risco_chuva_acida,
-                "fumaca_toxica": fumaca_toxica,
-                "efeito_estufa": risco_efeito_estufa
-            },
-            "qualidade_ambiental": {
-                "prediction": prediction_idx,
-                "label": prediction_label
-            },
-            # Mantém compatibilidade com formato anterior
-            "risco_chuva_acida": risco_chuva_acida,
-            "fumaca_toxica": fumaca_toxica,
-            "risco_efeito_estufa": risco_efeito_estufa,
-            "prediction": prediction_idx,
-            "label": prediction_label,
+        # Adiciona dados específicos de localização para o endpoint /local
+        resultado["cidade"] = local.cidade
+        resultado["pais"] = local.pais
+        resultado["coordenadas"] = {"lat": lat, "lon": lon}
+        resultado["dados_meteorologicos"] = {
+            "temperatura": temp_c,
+            "umidade": umid,
+            "pressao": press
         }
-        
+        resultado["dados_poluicao"] = comp
+
         print(f"✅ Resultado final gerado para {local.cidade}")
         return resultado
         
