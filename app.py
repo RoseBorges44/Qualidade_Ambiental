@@ -96,11 +96,12 @@ def load_model():
 
 # Mapeamentos
 QUALIDADE_MAPPING = {
-    0: "Muito Ruim",
-    1: "Ruim", 
+    
+    0: "Excelente",
+    1: "Boa", 
     2: "Moderada",
-    3: "Boa",
-    4: "Excelente"
+    3: "Ruim",
+    4: "Muito Ruim"
 }
 
 RISCO_MAPPING = {0: "Baixo", 1: "Alto"}
