@@ -305,4 +305,4 @@ Este projeto é destinado exclusivamente para fins educacionais como parte do De
     Rosemeri Janiski Bida De Oliveira Borges
 
 ## Frontend:
-[emanoelsp](https://www.google.com/search?q=https://github.com/emanoelsp&authuser=3) - IA Ambiental.
+[emanoelsp](https://github.com/emanoelsp/ia-ambiental.git) - IA Ambiental.
